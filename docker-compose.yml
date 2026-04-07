@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+
+  bot:
+    build: .
+    command: python bot.py
+    restart: always
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - ./ai:/app/ai
+      - ./logs:/app/logs
+
+  api:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    restart: always
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  dashboard:
+    build: .
+    command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+    restart: always
+    env_file: .env
+    ports:
+      - "8501:8501"
+
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER:     trader
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB:       trading_bot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
